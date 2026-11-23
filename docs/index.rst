@@ -4,7 +4,22 @@
 Planning a ski day documentation
 ================================
 
-.. automodule:: pasd
+.. automodule:: ski_data
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: ski_graph
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: ski_planner
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: ski_plots
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,4 +27,3 @@ Planning a ski day documentation
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
