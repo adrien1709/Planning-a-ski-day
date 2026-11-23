@@ -30,6 +30,10 @@ COL_DU_TOURMALET_LONGITUDE = 0.1453
 #: Lifts that are not part of the ski area (tourist cable cars).
 EXCLUDED_LIFTS = ("Pic du Midi",)
 
+#: Runs that can only be reached from the excluded lifts (off-piste from
+#: the Pic du Midi).
+EXCLUDED_RUNS = ("La Verte",)
+
 
 def download_geojson(name, max_attempts=3, wait_seconds=30):
     """Download an OpenSkiMap GeoJSON file, unless it is already saved.
@@ -155,6 +159,9 @@ def is_in_la_mongie(coordinates):
 def get_runs(la_mongie_only=True, skip_beginner=True):
     """Downhill runs of the Grand Tourmalet that are open.
 
+    Runs only reachable from the Pic du Midi cable cars
+    (:data:`EXCLUDED_RUNS`) are left out.
+
     Parameters
     ----------
     la_mongie_only : bool, optional
@@ -179,6 +186,8 @@ def get_runs(la_mongie_only=True, skip_beginner=True):
         if properties["status"] != "operating":
             continue
         if skip_beginner and properties["difficulty"] == "novice":
+            continue
+        if properties["name"] in EXCLUDED_RUNS:
             continue
         if la_mongie_only and not is_in_la_mongie(geometry["coordinates"]):
             continue
