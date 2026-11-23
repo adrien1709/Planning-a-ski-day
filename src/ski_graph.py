@@ -390,7 +390,8 @@ def add_links(graph, max_distance_m=LINK_DISTANCE_M):
     data has no line there. Each dead end (a node you cannot leave) is
     linked to the nearby nodes you can leave, and each node you cannot
     reach (such as a lift bottom) is linked from the nearby nodes you can
-    reach. Links are crossed at :data:`LINK_SPEED_KMH`.
+    reach. The bottom of each run is also linked to every lift that starts
+    nearby. Links are crossed at :data:`LINK_SPEED_KMH`.
 
     Parameters
     ----------
@@ -401,7 +402,14 @@ def add_links(graph, max_distance_m=LINK_DISTANCE_M):
     """
     has_exit = {node for node in graph.positions if graph.adjacency[node]}
     has_entry = {edge["end"] for edge in graph.edges}
+    run_ends = {edge["end"] for edge in graph.edges if edge["kind"] == "run"}
+    lift_bottoms = {edge["start"] for edge in graph.edges if edge["kind"] == "lift"}
     new_links = set()
+    # From the bottom of a run, you can reach any lift that starts nearby.
+    for end in run_ends:
+        for bottom in lift_bottoms:
+            if distance_m(graph.positions[end], graph.positions[bottom]) <= max_distance_m:
+                new_links.add((end, bottom))
     for node, position in graph.positions.items():
         if node not in has_exit:
             for other in has_exit:
