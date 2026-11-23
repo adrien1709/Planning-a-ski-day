@@ -35,7 +35,7 @@ All the data comes from [OpenSkiMap](https://openskimap.org), which processes [O
 - Lifts: https://tiles.openskimap.org/geojson/lifts.geojson
 - Ski areas: https://tiles.openskimap.org/geojson/ski_areas.geojson
 
-For La Mongie, I kept the downhill runs east of the Col du Tourmalet, removed the beginner runs (Baby, Plaine, Turon 2, Fusée, Vallée des Indiens, Adour) and the Pic du Midi cable cars.
+For La Mongie, I kept the downhill runs east of the Col du Tourmalet and removed the Pic du Midi cable cars and the lifts that are no longer in service. The beginner runs (Baby, Plaine, Turon 2, Fusée, Vallée des Indiens, Adour) stay in the graph, because some of them are the only way between two parts of the ski area, but they don't count as runs to ski.
 
 ## How it works
 
@@ -43,8 +43,9 @@ For La Mongie, I kept the downhill runs east of the Col du Tourmalet, removed th
 
 The ski area becomes a directed graph:
 
-- **Nodes** are the start and end points of runs and the bottom and top stations of lifts. Endpoints that are only a few meters apart are merged into one node, because runs and lifts are drawn as separate lines in OpenStreetMap and don't always touch.
-- **Edges** are runs (going downhill) and lifts (going uphill).
+- **Nodes** are the places where you can switch between runs and lifts. Runs and lifts are drawn as separate lines in OpenStreetMap and don't always touch, so points less than 40 m apart are merged into one node.
+- **Edges** are runs (going downhill) and lifts (going uphill). A run is cut into pieces where another run or a lift joins it halfway down, so that you can switch there.
+- **Flat links** are added at the bottom of the ski area, where runs end on a flat snow area and the lifts start a bit further away, with nothing in the data between them. A run that leads nowhere is linked to the lifts and runs less than 250 m away.
 - **Weights** are durations in minutes: run length divided by an average speed that depends on difficulty, and lift length divided by the lift speed plus a waiting time.
 
 The data gives the length of every run and lift, but not how long they take, so the speeds below are assumptions based on typical values. They are parameters in the code and can be changed.
@@ -52,17 +53,19 @@ The data gives the length of every run and lift, but not how long they take, so 
 | Edge | Default speed |
 |---|---|
 | Green and blue runs | 20 km/h |
-| Red runs | 25 km/h |
+| Red and freeride runs | 25 km/h |
 | Black runs | 30 km/h |
 | Chairlifts | 2.5 m/s |
 | Drag lifts and platters | 2.5 m/s |
 | Magic carpets | 0.5 m/s |
+| Flat links | 5 km/h |
 | Waiting time at each lift | 3 min |
 
 ### 2. The algorithms
 
 | Algorithm | Role | Complexity |
 |---|---|---|
+| Kosaraju | Checks which parts of the ski area can reach each other | O(V + E) |
 | Dijkstra | Travel time from the end of each run to the start of every other run | O(E log V) per run |
 | Dynamic programming over subsets | Exact optimal route on La Mongie | O(2<sup>n</sup> · n<sup>2</sup>) |
 | Greedy | Always go to the nearest run not skied yet | Fast, no guarantee |
