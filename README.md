@@ -22,7 +22,7 @@ So the project works on two ski areas in the French Pyrenees:
 
 | Ski area | Runs | Method |
 |---|---|---|
-| La Mongie | 20 | Exact algorithm (the true optimum) |
+| La Mongie | 19 | Exact algorithm (the true optimum) |
 | Grand Tourmalet (La Mongie + Barèges) | 80 | Heuristics |
 
 La Mongie is part of the Grand Tourmalet, so I can check how good the heuristics are on La Mongie, where I know the right answer, before trusting them on the whole ski area.
@@ -35,7 +35,7 @@ All the data comes from [OpenSkiMap](https://openskimap.org), which processes [O
 - Lifts: https://tiles.openskimap.org/geojson/lifts.geojson
 - Ski areas: https://tiles.openskimap.org/geojson/ski_areas.geojson
 
-For La Mongie, I kept the downhill runs east of the Col du Tourmalet and removed the Pic du Midi cable cars and the lifts that are no longer in service. The beginner runs (Baby, Plaine, Turon 2, Fusée, Vallée des Indiens, Adour) stay in the graph, because some of them are the only way between two parts of the ski area, but they don't count as runs to ski.
+For La Mongie, I kept the downhill runs east of the Col du Tourmalet and removed the lifts that are no longer in service. I also removed the Pic du Midi cable cars and La Verte, a freeride route that can only be reached from them. The beginner runs (Baby, Plaine, Turon 2, Fusée, Vallée des Indiens, Adour) stay in the graph, because some of them are the only way between two parts of the ski area, but they don't count as runs to ski.
 
 ## How it works
 
@@ -45,7 +45,7 @@ The ski area becomes a directed graph:
 
 - **Nodes** are the places where you can switch between runs and lifts. Runs and lifts are drawn as separate lines in OpenStreetMap and don't always touch, so points less than 40 m apart are merged into one node.
 - **Edges** are runs (going downhill) and lifts (going uphill). A run is cut into pieces where another run or a lift joins it halfway down, so that you can switch there.
-- **Flat links** are added at the bottom of the ski area, where runs end on a flat snow area and the lifts start a bit further away, with nothing in the data between them. A run that leads nowhere is linked to the lifts and runs less than 250 m away.
+- **Flat links** are added at the bottom of the ski area, where runs end on a flat snow area and the lifts start a bit further away, with nothing in the data between them. The bottom of each run is linked to every lift that starts less than 250 m away, and runs that lead nowhere are linked to the nearby runs and lifts.
 - **Weights** are durations in minutes: run length divided by an average speed that depends on difficulty, and lift length divided by the lift speed plus a waiting time.
 
 The data gives the length of every run and lift, but not how long they take, so the speeds below are assumptions based on typical values. They are parameters in the code and can be changed.
