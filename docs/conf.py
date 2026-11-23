@@ -25,6 +25,10 @@ extensions = [
     'sphinx.ext.napoleon',
 ]
 
+# Libraries that the documentation build does not need to install:
+# Sphinx only reads the docstrings, it does not run the code.
+autodoc_mock_imports = ['requests', 'matplotlib']
+
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
