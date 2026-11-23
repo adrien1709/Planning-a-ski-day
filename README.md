@@ -6,9 +6,8 @@ When I ski a resort I don't know well, I spend the first lift ride trying to fig
 
 Given a ski area, a starting point at the base and a time budget, the program finds the route that skis the largest number of different runs and gets back to the base before time runs out.
 
-<!-- TODO: ajouter image creer par le code -->
 <p align="center">
-  <img src="images/route_la_mongie.png" alt="Optimal route on La Mongie" width="700">
+  <img src="images/la_mongie_map.png" alt="La Mongie ski area: runs and lifts" width="700">
 </p>
 
 ## The problem
@@ -60,6 +59,12 @@ The data gives the length of every run and lift, but not how long they take, so 
 | Magic carpets | 0.5 m/s |
 | Flat links | 5 km/h |
 | Waiting time at each lift | 3 min |
+
+Example: fastest way from the bottom of the Sud chairlift to the top of the Pourteilh chairlift, found with Dijkstra.
+
+<p align="center">
+  <img src="images/dijkstra_example.png" alt="Fastest path found with Dijkstra" width="600">
+</p>
 
 ### 2. The algorithms
 
