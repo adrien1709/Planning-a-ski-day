@@ -50,6 +50,10 @@ LIFT_WAIT_MINUTES = 3
 #: Two points closer than this are treated as the same place, in meters.
 MERGE_DISTANCE_M = 40
 
+#: Shortest run kept as a target, in meters. Shorter ones are small bits of
+#: runs that are almost entirely on the other side of the Col du Tourmalet.
+MIN_RUN_LENGTH_M = 100
+
 #: Longest link added across a flat area where the data has a gap, in meters.
 LINK_DISTANCE_M = 250
 
@@ -555,6 +559,131 @@ def fastest_path(graph, source, target):
         path.append(edge)
         node = edge["start"]
     return path[::-1]
+
+
+def target_runs(graph):
+    """The runs to ski, each one as a single block from its top to its bottom.
+
+    A named run is often made of several pieces in the graph, and can split
+    into two branches. Skiing a run means skiing its longest line from top
+    to bottom in one go, using only pieces that carry its name. Beginner
+    runs are not targets, and neither are runs shorter than
+    :data:`MIN_RUN_LENGTH_M`.
+
+    Parameters
+    ----------
+    graph : SkiGraph
+        The graph.
+
+    Returns
+    -------
+    list of dict
+        One dict per run, sorted by name, with the keys ``name``, ``start``
+        (top node), ``end`` (bottom node), ``minutes``, ``length_m`` and
+        ``path`` (list of edge indexes, in order).
+    """
+    pieces_by_name = {}
+    for index, edge in enumerate(graph.edges):
+        if edge["kind"] != "run" or not edge["name"]:
+            continue
+        if edge["difficulty"] == "novice":
+            continue
+        for name in edge["name"].split(","):
+            pieces_by_name.setdefault(name.strip(), []).append(index)
+
+    runs = []
+    for name, pieces in sorted(pieces_by_name.items()):
+        best = longest_line(graph, pieces)
+        length = sum(graph.edges[i]["length_m"] for i in best)
+        if length < MIN_RUN_LENGTH_M:
+            continue
+        runs.append({
+            "name": name,
+            "start": graph.edges[best[0]]["start"],
+            "end": graph.edges[best[-1]]["end"],
+            "minutes": sum(graph.edges[i]["minutes"] for i in best),
+            "length_m": length,
+            "path": best,
+        })
+    return runs
+
+
+def longest_line(graph, pieces):
+    """Longest chain of pieces that can be skied one after the other.
+
+    Tries every chain that never comes back to a node it already passed
+    through. A run has at most a few pieces, so this is fast.
+
+    Parameters
+    ----------
+    graph : SkiGraph
+        The graph.
+    pieces : list of int
+        Indexes of the edges that make up the run.
+
+    Returns
+    -------
+    list of int
+        Edge indexes of the longest chain, in order.
+    """
+    leaving = {}
+    for index in pieces:
+        leaving.setdefault(graph.edges[index]["start"], []).append(index)
+
+    best, best_length = [], -1.0
+
+    def extend(chain, visited, length):
+        nonlocal best, best_length
+        if length > best_length:
+            best, best_length = list(chain), length
+        node = graph.edges[chain[-1]]["end"]
+        for index in leaving.get(node, []):
+            nxt = graph.edges[index]["end"]
+            if nxt not in visited:
+                chain.append(index)
+                visited.add(nxt)
+                extend(chain, visited, length + graph.edges[index]["length_m"])
+                visited.remove(nxt)
+                chain.pop()
+
+    for first in pieces:
+        edge = graph.edges[first]
+        extend([first], {edge["start"], edge["end"]}, edge["length_m"])
+    return best
+
+
+def travel_times(graph, runs, base):
+    """Fastest travel times between the runs, and to and from the base.
+
+    Parameters
+    ----------
+    graph : SkiGraph
+        The graph.
+    runs : list of dict
+        Runs from :func:`target_runs`.
+    base : int
+        Node where the day starts and ends.
+
+    Returns
+    -------
+    from_base : list of float
+        ``from_base[j]``: minutes from the base to the top of run ``j``.
+    between : list of list of float
+        ``between[i][j]``: minutes from the bottom of run ``i`` to the top
+        of run ``j``.
+    to_base : list of float
+        ``to_base[i]``: minutes from the bottom of run ``i`` back to the base.
+
+    Times are ``math.inf`` when there is no way to go.
+    """
+    from_start, _ = dijkstra(graph, base)
+    from_base = [from_start.get(run["start"], math.inf) for run in runs]
+    between, to_base = [], []
+    for run in runs:
+        minutes, _ = dijkstra(graph, run["end"])
+        between.append([minutes.get(other["start"], math.inf) for other in runs])
+        to_base.append(minutes.get(base, math.inf))
+    return from_base, between, to_base
 
 
 def print_path(path, start_time="09:00"):
