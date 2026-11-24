@@ -21,7 +21,7 @@ So the project works on two ski areas in the French Pyrenees:
 
 | Ski area | Runs | Method |
 |---|---|---|
-| La Mongie | 19 | Exact algorithm (the true optimum) |
+| La Mongie | 17 | Exact algorithm (the true optimum) |
 | Grand Tourmalet (La Mongie + Barèges) | 80 | Heuristics |
 
 La Mongie is part of the Grand Tourmalet, so I can check how good the heuristics are on La Mongie, where I know the right answer, before trusting them on the whole ski area.
@@ -34,7 +34,7 @@ All the data comes from [OpenSkiMap](https://openskimap.org), which processes [O
 - Lifts: https://tiles.openskimap.org/geojson/lifts.geojson
 - Ski areas: https://tiles.openskimap.org/geojson/ski_areas.geojson
 
-For La Mongie, I kept the downhill runs east of the Col du Tourmalet and removed the lifts that are no longer in service. I also removed the Pic du Midi cable cars and La Verte, a freeride route that can only be reached from them. The beginner runs (Baby, Plaine, Turon 2, Fusée, Vallée des Indiens, Adour) stay in the graph, because some of them are the only way between two parts of the ski area, but they don't count as runs to ski.
+For La Mongie, I kept the downhill runs east of the Col du Tourmalet and removed the lifts that are no longer in service. I also removed the Pic du Midi cable cars and La Verte, a freeride route that can only be reached from them. The beginner runs (Baby, Plaine, Turon 2, Fusée, Vallée des Indiens, Adour) stay in the graph, because some of them are the only way between two parts of the ski area, but they don't count as runs to ski. Runs shorter than 100 m on the La Mongie side (small bits of Bareges runs) and runs that cannot be reached from the base are not counted, which leaves 17 runs.
 
 ## How it works
 
@@ -52,7 +52,7 @@ The data gives the length of every run and lift, but not how long they take, so 
 | Edge | Default speed |
 |---|---|
 | Green and blue runs | 20 km/h |
-| Red and freeride runs | 25 km/h |
+| Red runs | 25 km/h |
 | Black runs | 30 km/h |
 | Chairlifts | 2.5 m/s |
 | Drag lifts and platters | 2.5 m/s |
@@ -86,34 +86,29 @@ Example: fastest way from the bottom of the Sud chairlift to the top of the Pour
 
 ## Results
 
-<!-- TODO: ajouter image creer par le code -->
-
 ### Optimal route on La Mongie
 
-<!-- TODO: image route trouver par le code -->
 <p align="center">
   <img src="images/route_la_mongie.png" alt="Optimal route on La Mongie" width="700">
 </p>
 
-<!-- TODO: une ou deux phrase pour decrire ce que montre l'image -->
+With a 2-hour budget, starting and ending at the bottom of the Sud chairlift, the best route skis 12 of the 17 runs.
 
 ### Runs skied vs. time budget
 
-<!-- TODO: image creer par le code en fonction du temps et de piste skier-->
 <p align="center">
   <img src="images/runs_vs_budget.png" alt="Runs skied vs. time budget" width="600">
 </p>
 
-<!-- TODO: from which budget can the whole ski area be done? -->
+With 1 hour, the greedy method skis only 3 runs where the optimum skis 7. The gap shrinks as the budget grows: with 4 hours, the optimum skis all 17 runs and the greedy method 16.
 
 ### Why the exact method stops at about 20 runs
 
-<!-- TODO: running time of the exact algorithm for 10 to 20 runs, log scale -->
 <p align="center">
   <img src="images/exact_runtime.png" alt="Running time of the exact algorithm" width="600">
 </p>
 
-<!-- TODO: how much does the running time grow for each extra run? -->
+The running time roughly doubles with each extra run, as expected for an O(2^n · n^2) algorithm. Thanks to NumPy it stays under a second for 17 runs, but the same growth makes it impossible for the 80 runs of the Grand Tourmalet.
 
 ### Heuristics vs. optimum
 
